@@ -1,0 +1,63 @@
+import streamlit as st
+import pandas as pd
+import plotly.express as px
+from datetime import datetime
+
+# --- CONFIGURATION ---
+st.set_page_config(page_title="SDLC Project Portal", layout="wide")
+st.title("🚀 SDLC Weekly Status Portal")
+
+# --- DATA MOCKUP (Replace with database connection) ---
+def load_data():
+    return pd.DataFrame({
+        "Week": ["W1", "W2", "W3"],
+        "Status": ["On Track", "On Track", "At Risk"],
+        "Bugs": [5, 12, 8],
+        "Completion": [20, 45, 60]
+    })
+
+df = load_data()
+
+# --- SIDEBAR NAVIGATION ---
+page = st.sidebar.selectbox("Navigate", ["Project Dashboard", "Submit Weekly Update"])
+
+if page == "Project Dashboard":
+    # 1. KPI Row
+    col1, col2, col3 = st.columns(3)
+    col1.metric("Overall Health", "🟡 At Risk", delta="-5%")
+    col2.metric("Open Defects", "8", delta="-4")
+    col3.metric("Sprint Completion", "60%", delta="15%")
+
+    st.divider()
+
+    # 2. Charts Row
+    c1, c2 = st.columns(2)
+    with c1:
+        st.subheader("Progress Over Time")
+        fig_progress = px.line(df, x="Week", y="Completion", markers=True)
+        st.plotly_chart(fig_progress, use_container_width=True)
+    
+    with c2:
+        st.subheader("Defect Trend")
+        fig_bugs = px.bar(df, x="Week", y="Bugs", color="Status")
+        st.plotly_chart(fig_bugs, use_container_width=True)
+
+    # 3. RAID Log
+    st.subheader("⚠️ Active Risks & Blockers")
+    st.table(pd.DataFrame({
+        "Impact": ["High", "Medium"],
+        "Description": ["API Credentials Missing", "UI Latency Issues"],
+        "Owner": ["Dev Team", "Lead Architect"]
+    }))
+
+elif page == "Submit Weekly Update":
+    st.subheader("📥 Submit Progress Report")
+    with st.form("update_form"):
+        week_num = st.text_input("Week Number (e.g., W4)")
+        phase = st.selectbox("Current Phase", ["Requirements", "Design", "Dev", "QA", "UAT"])
+        health = st.select_slider("Project Health", options=["Critical", "At Risk", "On Track"])
+        notes = st.text_area("Key Accomplishments & Blockers")
+        
+        submitted = st.form_submit_button("Submit Update")
+        if submitted:
+            st.success(f"Update for {week_num} recorded successfully!")
